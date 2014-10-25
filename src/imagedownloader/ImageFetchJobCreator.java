@@ -28,9 +28,15 @@ public class ImageFetchJobCreator {
         public final Integer imagesPerGallery;
         public final String baseDirectory;
         public final String baseUrl;
-        public final String person;
+        public final String imageBaseName;
         public final String imageType;
         public final String logFile = "download.log";
+        
+        private void CreateBaseDir() {
+            File f = new File(this.baseDirectory);
+            if (!f.exists())
+                f.mkdirs();
+        }
         
         Parameters(String[] args) throws FileNotFoundException, IOException {
             if (args.length != 1) {
@@ -44,10 +50,12 @@ public class ImageFetchJobCreator {
             galleryStart = Integer.parseInt(p.getProperty("galleryStart"));
             galleryCount = Integer.parseInt(p.getProperty("galleryCount"));
             imagesPerGallery = Integer.parseInt(p.getProperty("imagesPerGallery"));
-            person = p.getProperty("person").toLowerCase().replace(' ', '-');
-            baseDirectory = p.getProperty("baseDirectory") + p.getProperty("person");
+            imageBaseName = p.getProperty("imageBaseName");
+            baseDirectory = p.getProperty("baseDirectory");
             baseUrl = p.getProperty("baseUrl");
             imageType = p.getProperty("imageType");
+            
+            CreateBaseDir();
          }
     }
     
@@ -72,19 +80,23 @@ public class ImageFetchJobCreator {
             throws MalformedURLException, 
                    IOException, 
                    IllegalArgumentException,
-                   FileNotFoundException {
-       Parameters p = new Parameters(args);
-       out = new PrintWriter (p.baseDirectory + "\\" + p.logFile);
-       for (Integer i = p.galleryStart; i <= p.galleryCount; ++i) {
-           String galleryDir = CreateDirectory(p, i);
-           for (Integer j = 1; j <= p.imagesPerGallery; ++j) {
-               String fileName = p.person + "-" + j.toString() + "." + p.imageType;
-               URL url = new URL(p.baseUrl + p.person + "/" + 
-                                 i.toString() + "/" + fileName);
-               String fullPath = galleryDir + fileName;
-               GetImage(url, fullPath, p.imageType);
-               LogDownload(url, fullPath);
-           }
-       }
+                   FileNotFoundException,
+                   InterruptedException {
+        Parameters p = new Parameters(args);
+        out = new PrintWriter (p.baseDirectory + "\\" + p.logFile);
+        for (Integer i = p.galleryStart; i <= p.galleryCount; ++i) {
+            String galleryDir = CreateDirectory(p, i);
+            for (Integer j = 1; j <= p.imagesPerGallery; ++j) {
+                String fileName = p.imageBaseName + "-" + j.toString() + "." + 
+                                  p.imageType;
+                URL url = new URL(p.baseUrl + p.imageBaseName + "/" + 
+                                  i.toString() + "/" + fileName);
+                String fullPath = galleryDir + fileName;
+                GetImage(url, fullPath, p.imageType);
+                LogDownload(url, fullPath);
+            }
+            System.out.println("-----------------------------------------");
+            Thread.sleep(1000);
+        }
     }
 }

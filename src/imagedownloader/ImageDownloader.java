@@ -18,6 +18,7 @@ public class ImageDownloader {
 
     /**
      * @param args the command line arguments
+     * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
         ImageFetchJobCreator imageFetcher = new ImageFetchJobCreator();
@@ -29,6 +30,8 @@ public class ImageDownloader {
             Logger.getLogger(ImageFetchJobCreator.class.getName()).log(Level.SEVERE, null, ex);
         }  catch (FileNotFoundException ex) {
             Logger.getLogger(ImageFetchJobCreator.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ImageDownloader.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
     
