@@ -23,8 +23,8 @@ public class ImageFetchJobCreator {
     private PrintWriter out;
     
     class Parameters {
-        public final Integer galleryStart;
-        public final Integer galleryCount;
+        public final Integer start;
+        public final Integer end;
         public final Integer imagesPerGallery;
         public final String baseDirectory;
         public final String baseUrl;
@@ -34,8 +34,9 @@ public class ImageFetchJobCreator {
         
         private void CreateBaseDir() {
             File f = new File(this.baseDirectory);
-            if (!f.exists())
+            if (!f.exists()) {
                 f.mkdirs();
+            }
         }
         
         Parameters(String[] args) throws FileNotFoundException, IOException {
@@ -47,8 +48,8 @@ public class ImageFetchJobCreator {
             FileInputStream in = new FileInputStream(args[0]);
             Properties p = new Properties();
             p.load(in);
-            galleryStart = Integer.parseInt(p.getProperty("galleryStart"));
-            galleryCount = Integer.parseInt(p.getProperty("galleryCount"));
+            start = Integer.parseInt(p.getProperty("galleryStart"));
+            end = Integer.parseInt(p.getProperty("galleryCount"));
             imagesPerGallery = Integer.parseInt(p.getProperty("imagesPerGallery"));
             imageBaseName = p.getProperty("imageBaseName");
             baseDirectory = p.getProperty("baseDirectory");
@@ -59,7 +60,8 @@ public class ImageFetchJobCreator {
          }
     }
     
-    private void GetImage(URL url, String fullPath, String imageType) throws IOException {
+    private void GetImage(URL url, String fullPath, String imageType) 
+            throws IOException {
         BufferedImage img = ImageIO.read(url);
         File outputfile = new File(fullPath);
         ImageIO.write(img, imageType, outputfile);
@@ -76,6 +78,21 @@ public class ImageFetchJobCreator {
         System.out.println("Downloaded: " + url.toString() + " to " + fullPath);    
     }
 
+    public void GetSequentialImages(int start, 
+                                    int end, 
+                                    String baseUrl,
+                                    String directory,
+                                    String imageType) 
+            throws MalformedURLException, IOException {
+        new File(directory).mkdirs();
+        for (int i = start; i <= end; ++i) {
+            String imageName = String.valueOf(i) + "." + imageType;
+            GetImage(new URL(baseUrl + imageName),
+                     directory + imageName,
+                     imageType);
+        }
+    }
+          
     public void Run(String[] args) 
             throws MalformedURLException, 
                    IOException, 
@@ -84,7 +101,7 @@ public class ImageFetchJobCreator {
                    InterruptedException {
         Parameters p = new Parameters(args);
         out = new PrintWriter (p.baseDirectory + "\\" + p.logFile);
-        for (Integer i = p.galleryStart; i <= p.galleryCount; ++i) {
+        for (Integer i = p.start; i <= p.end; ++i) {
             String galleryDir = CreateDirectory(p, i);
             for (Integer j = 1; j <= p.imagesPerGallery; ++j) {
                 String fileName = p.imageBaseName + "-" + j.toString() + "." + 
